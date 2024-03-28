@@ -46,7 +46,7 @@ class SearchView(APIView):
 
             show_list.append(show_dict)
 
-        return Response({'data': show_list}, status=status.HTTP_200_OK)
+        return Response(show_list, status=status.HTTP_200_OK)
 
 
 class ShowByIdView(APIView):
@@ -68,8 +68,12 @@ class ShowByIdView(APIView):
                     summary = json_api.get('summary'), 
                     genres = json_api.get('genres'), 
                     show_object = json_api)
+            
+        data = show.show_object
+        comments_qs = Comment.objects.filter(show = show)
+        data['comments'] = CommentSerializer(comments_qs, many = True).data
 
-        return Response({'data': show.show_object}, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)
 
 class CommentView(APIView):
     permission_classes = (AllowAny, )
