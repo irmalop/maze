@@ -36,3 +36,17 @@ class SearchView(APIView):
             show_list.append(show_dict)
 
         return Response({'data': show_list}, status=status.HTTP_200_OK)
+
+
+class ShowByIdView(APIView):
+    permission_classes = (AllowAny, )
+
+    def get(self, request, show_id):
+
+        tv_mazeapi = TvMazeApi()
+        response_api = tv_mazeapi.get_show_by_id(show_id)
+        print(response_api)
+        
+        json_api = response_api.json()
+
+        return Response({'data': json_api}, status=status.HTTP_200_OK)
