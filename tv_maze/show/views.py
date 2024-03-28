@@ -4,8 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 
 from .api import TvMazeApi
-from .models import Show
-from .serializers import SearchSerializer
+from .models import Show, Comment
+from .serializers import SearchSerializer, AddCommentSerializer
 
 
 class SearchView(APIView):
@@ -60,3 +60,21 @@ class ShowByIdView(APIView):
                     show_object = json_api)
 
         return Response({'data': show.show_object}, status=status.HTTP_200_OK)
+
+class CommentView(APIView):
+    permission_classes = (AllowAny, )
+
+    def post(self, request):
+
+        serializer = AddCommentSerializer(data = request.data)
+        serializer.is_valid(raise_exception = True)
+
+        data = serializer.validated_data
+
+        Comment.objects.create(
+            show = data.get('show'),
+            comment = data.get('comment'),
+            rating = data.get('rating')
+        )
+
+        return Response({}, status=status.HTTP_201_CREATED)
