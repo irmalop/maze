@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 
-from .models import Show
+from .models import Show, Comment
 
 
 class SearchSerializer(serializers.Serializer):
@@ -31,3 +31,10 @@ class AddCommentSerializer(serializers.Serializer):
         if errors:
             raise ValidationError(errors)
         return data
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ('comment',
+                  'rating')
+        

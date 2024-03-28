@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny
 
 from .api import TvMazeApi
 from .models import Show, Comment
-from .serializers import SearchSerializer, AddCommentSerializer
+from .serializers import SearchSerializer, AddCommentSerializer, CommentSerializer
 
 
 class SearchView(APIView):
@@ -33,6 +33,16 @@ class SearchView(APIView):
                 'summary': show.get('summary'),
                 'genres': show.get('genres')
             }
+            
+            show_qs = Show.objects.filter(
+                tvshow_id = show.get('id')
+            )
+            if show_qs:
+                show_obj = show_qs.first()
+ 
+                comments_qs = Comment.objects.filter(show = show_obj)
+                show_dict['comments'] = CommentSerializer(comments_qs, many = True).data
+            
 
             show_list.append(show_dict)
 
