@@ -1,3 +1,6 @@
+import time
+from django.db.models import Avg
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -5,7 +8,8 @@ from rest_framework.permissions import AllowAny
 
 from .api import TvMazeApi
 from .models import Show, Comment
-from .serializers import SearchSerializer, AddCommentSerializer, CommentSerializer
+from .serializers import SearchSerializer, AddCommentSerializer,\
+    CommentSerializer, ShowIdSerializer
 
 
 class SearchView(APIView):
@@ -29,7 +33,9 @@ class SearchView(APIView):
             show_dict = {
                 'id': show.get('id'),
                 'name': show.get('name'),
-                'channel': show.get('webChannel').get('name') if show.get('webChannel') != None else show.get('network').get('name'),
+                'channel': show.get('webChannel').get('name') \
+                    if show.get('webChannel') != None \
+                        else show.get('network').get('name'),
                 'summary': show.get('summary'),
                 'genres': show.get('genres')
             }
@@ -64,7 +70,9 @@ class ShowByIdView(APIView):
             
             show = Show.objects.create(tvshow_id = show_id,
                     name = json_api.get('name'), 
-                    channel = json_api.get('webChannel').get('name') if json_api.get('webChannel') != None else json_api.get('network').get('name'), 
+                    channel = json_api.get('webChannel').get('name') \
+                        if json_api.get('webChannel') != None \
+                        else json_api.get('network').get('name'), 
                     summary = json_api.get('summary'), 
                     genres = json_api.get('genres'), 
                     show_object = json_api)
@@ -92,3 +100,22 @@ class CommentView(APIView):
         )
 
         return Response({}, status=status.HTTP_201_CREATED)
+
+class RatingView(APIView):
+    permission_classes = (AllowAny, )
+
+    def get(self, request, show_id):
+        start_time = time.time()
+
+        serialized = ShowIdSerializer(data={'show_id': show_id})
+        serialized.is_valid(raise_exception=True)
+        data = serialized.validated_data
+
+        average = Comment.objects.filter(show_id = data.get('show'))\
+            .aggregate(Avg('rating'))['rating__avg']
+        
+        elapsed_time = time.time() - start_time
+        remaining_time = max(0, 4 - elapsed_time)
+        time.sleep(remaining_time)
+
+        return Response({'rating_average': average}, status=status.HTTP_200_OK)

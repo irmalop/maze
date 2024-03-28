@@ -18,7 +18,7 @@ class AddCommentSerializer(serializers.Serializer):
         show_qs = Show.objects.filter(tvshow_id = show_id)
         
         if not show_qs:
-            errors['show'] = f"Show con id{show_id} no registrado"
+            errors['show'] = f"Show con id {show_id} no registrado"
             
         else:
             data['show'] = show_qs.first()
@@ -37,4 +37,18 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ('comment',
                   'rating')
-        
+
+class ShowIdSerializer(serializers.Serializer):
+    show_id = serializers.IntegerField()
+    
+    def validate(self, data):
+        errors = {}
+        show_id = data.get("show_id")
+        show_qs = Show.objects.filter(tvshow_id = show_id)
+        if not show_qs:
+            errors['show'] = f"Show con id {show_id} no registrado"
+        else:
+            data['show'] = show_qs.first()
+        if errors:
+            raise ValidationError(errors)
+        return data
