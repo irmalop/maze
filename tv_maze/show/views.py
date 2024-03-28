@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 
 from .api import TvMazeApi
+from .models import Show
 from .serializers import SearchSerializer
 
 
@@ -42,11 +43,20 @@ class ShowByIdView(APIView):
     permission_classes = (AllowAny, )
 
     def get(self, request, show_id):
+        show_qs = Show.objects.filter(tvshow_id = show_id)
+        if show_qs:
+            show = show_qs.first()
+            
+        else:
+            tv_mazeapi = TvMazeApi()
+            response_api = tv_mazeapi.get_show_by_id(show_id)
+            json_api = response_api.json()
+            
+            show = Show.objects.create(tvshow_id = show_id,
+                    name = json_api.get('name'), 
+                    channel = json_api.get('webChannel').get('name') if json_api.get('webChannel') != None else json_api.get('network').get('name'), 
+                    summary = json_api.get('summary'), 
+                    genres = json_api.get('genres'), 
+                    show_object = json_api)
 
-        tv_mazeapi = TvMazeApi()
-        response_api = tv_mazeapi.get_show_by_id(show_id)
-        print(response_api)
-        
-        json_api = response_api.json()
-
-        return Response({'data': json_api}, status=status.HTTP_200_OK)
+        return Response({'data': show.show_object}, status=status.HTTP_200_OK)
